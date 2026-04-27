@@ -11,7 +11,7 @@ ADONetCodeGen supports:
 - User-defined table types
 - Stored procedures
 - User-defined functions
-- Batching, introduced in `Microsoft.Data.SqlClient` in 5.2.0 (2024)
+- Batching, introduced in `Microsoft.Data.SqlClient` in 5.2.0.
 
 ## Usage
 
