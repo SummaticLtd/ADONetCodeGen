@@ -66,17 +66,19 @@ An example workflow:
 
 ## FAQs
 
+### Can I use this project from any dotnet language?
+
+The generated code is in F#, but it can be referenced from any dotnet language.
+
+If you would like to use it from C#, please open an issue and it will be easy to create a switch to allow generated code to use Nullables/Nullable Reference Types in preference to ValueOption types, making this code completely C#-friendly.
+  
+### I'm missing feature X, can you add it?
+
+If you are missing a feature in ADONetCodeGen, please request one and contribute. It is an easy library to contribute to, since analysis and codegen are separated.
+
 ### When should I use this project or Facil?
 
 - Facil is very well tested, while currently ADONetCodeGen is only tested via database tests inside private SummaticLtd repos.
 - Facil has more complete support for `SqlDbType`s while ADONetCodeGen only supports a common subset at present.
 - ADONetCodeGen supports user-defined functions.
 - ADONetCodeGen supports batching.
-  
-If you are missing a feature in ADONetCodeGen, please request one and contribute. It is an easy library to contribute to, since analysis and codegen are separated.
-
-### Can I use this project from any dotnet language?
-
-The generated code is in F#, but it can be referenced from any dotnet language.
-
-If you would like to use it from C#, please open an issue and it will be easy to create a switch to allow generated code to use Nullables/Nullable Reference Types in preference to ValueOption types, making this code completely C#-friendly.
