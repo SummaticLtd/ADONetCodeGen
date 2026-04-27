@@ -35,7 +35,7 @@ The generated code contains:
 
 The commands take an `ISqlConnection` as input, which can be created via `SqlConn(conn: SqlConnection)` or `SqlConnWithTransaction`. This type ensures that at most one transaction can be active at a time, and allows the handling of transactions to be automatic.
 
-The easiest way to execute one of these commands is via the extension methods, which you can see by typing `.` after the `Command` object. For example, if you have a stored procedure `DeleteUser` you can use a `Task<'T>`:
+The easiest way to execute one of these commands is via the extension methods, which you can see by typing `.` after the `Command` object. For example, if you have a stored procedure `DeleteUser`:
 
 ```fsharp
 DeleteUser.Command.executeStoredProcNonQuery(conn, DeleteUser.Input(userId))
@@ -70,7 +70,7 @@ An example workflow:
 
 - Facil is very well tested, while currently ADONetCodeGen is only tested via database tests inside private SummaticLtd repos.
 - Facil has more complete support for `SqlDbType`s while ADONetCodeGen only supports a common subset at present.
-- ADONetCodeGen supports user-defined functions
+- ADONetCodeGen supports user-defined functions.
 - ADONetCodeGen supports batching.
   
 If you are missing a feature in ADONetCodeGen, please request one and contribute. It is an easy library to contribute to, since analysis and codegen are separated.
