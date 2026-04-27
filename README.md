@@ -18,7 +18,7 @@ ADONetCodeGen supports:
 ### Generating code
 
 Use `ADONetCodeGen.Writer` to generate code. You need to provide:
-- A design time connection string: e.g. "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MyDB;Integrated Security=True"
+- A design time connection string: e.g. @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MyDB;Integrated Security=True"
 - A design time server: e.g. @"(localdb)\MSSQLLocalDB"
 - A namespace: e.g. "GeneratedADONET"
 
