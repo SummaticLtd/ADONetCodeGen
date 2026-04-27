@@ -11,7 +11,7 @@ ADONetCodeGen supports:
 - User-defined table types
 - Stored procedures
 - User-defined functions
-- Batching, recently introduced in `Microsoft.Data.SqlClient` (in 5.2.0, released in 2024)
+- Batching, introduced in `Microsoft.Data.SqlClient` in 5.2.0 (2024)
 
 ## Usage
 
@@ -28,7 +28,7 @@ Call `ADONetCodeGen.Writer.getGeneratedFileLines(designTimeConn, designTimeServe
 
 The generated code contains:
 - User-defined table types, which are self-explanatory.
-- Stored Procedures, UDFs.. These define a module with the name of the object, containing:
+- One module for each Stored Procedure and UDF. Each module contains:
     - An `Input` type, if the command has parameters.
     - An `Output` type, if the command has a result set.
     - A `Command` object, which is of type `GenADO.StoredProcNonQuery`, `GenADO.StoredProcQuery`, `GenADO.TableUDF`, `GenADO.ScalarUDF`.
@@ -56,25 +56,27 @@ A good setup has:
 
 An example workflow:
 - An SSDT project which deploys to localdb on build.
-- A test case case which:
+- A test case which:
   - Analyzes the sql files in the SQL project and the .sqlproj itself and gets a hash.
   - Creates a first line "Sql hash: {hash}".
   - If the hash matches the first line of the generated code file, the test passes since the code is up to date.
   - If not, the test attempts to generate this code:
     - Checks that the database is deployed and up to date (by looking at the dacpac modified time and comparing to the last modified sql file time). If not then the test fails.
-    - If the database is up to date, the test generates the code (and fails saying that the code has been updated).
+    - If the database is up to date, the test generates the code (and fails, with an instruction to commit changes and re-run).
 
 ## FAQs
 
 ### When should I use this project or Facil?
 
 - Facil is very well tested, while currently ADONetCodeGen is only tested via database tests inside private SummaticLtd repos.
-- Facil has more complete support for `SqlDbType`s (e.g. using `SqlDbType.Money` currently fails in the ADONetCodeGen generator).
+- Facil has more complete support for `SqlDbType`s while ADONetCodeGen only supports a common subset at present.
 - ADONetCodeGen supports user-defined functions
 - ADONetCodeGen supports batching.
   
 If you are missing a feature in ADONetCodeGen, please request one and contribute. It is an easy library to contribute to, since analysis and codegen are separated.
 
 ### Can I use this project from any dotnet language?
-- The generated code is in F#, but it can be referenced from any dotnet language.
-- If you would like to use it from C#, please open an issue and it will be easy to create a switch to allow generated code to use Nullables/Nullable Reference Types in preference to ValueOption types, making this code completely C#-friendly.
+
+The generated code is in F#, but it can be referenced from any dotnet language.
+
+If you would like to use it from C#, please open an issue and it will be easy to create a switch to allow generated code to use Nullables/Nullable Reference Types in preference to ValueOption types, making this code completely C#-friendly.
