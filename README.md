@@ -1,5 +1,7 @@
 ﻿# ADONetCodeGen
 
+[![NuGet](https://img.shields.io/nuget/v/ADONetCodeGen.svg)](https://www.nuget.org/packages/ADONetCodeGen)
+
 ADONetCodeGen generates ADO.NET code to interface with an MSSQL database (SQL Server or Azure SQL Database) in a fast, type-safe, and trim-safe way.
 
 It is similar in purpose to [SqlPlus](https://www.sqlplus.net/) and [Facil](https://github.com/cmeeren/Facil).
