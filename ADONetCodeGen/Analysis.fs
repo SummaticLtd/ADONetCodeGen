@@ -23,8 +23,6 @@ type SqlType =
     | Single
     | Double
     | Decimal
-    | Timespan
-    | DateTimeOffset
     | UserDefinedTableType of name: string
     static member FromSQL(dt: DataType) =
         // https://github.com/dotnet/docs/blob/main/docs/framework/data/adonet/sql-server-data-type-mappings.md
@@ -66,10 +64,6 @@ type SqlType =
         | SqlDataType.SmallMoney
         | SqlDataType.Numeric
             -> Decimal
-        | SqlDataType.Time
-            -> Timespan
-        | SqlDataType.DateTimeOffset
-            -> DateTimeOffset
         | SqlDataType.UserDefinedTableType ->
             UserDefinedTableType dt.Name
         | SqlDataType.UserDefinedDataType
@@ -81,6 +75,8 @@ type SqlType =
         | SqlDataType.Geometry
         | SqlDataType.Geography
         | SqlDataType.Vector
+        | SqlDataType.Time
+        | SqlDataType.DateTimeOffset
             -> failwith $"{dt.Name} is not supported"
     member t.SqlDbType = // TODO: refine the types here
         match t with
@@ -96,9 +92,10 @@ type SqlType =
         | Double -> SqlDbType.Float
         | UserDefinedTableType _ -> SqlDbType.Udt
         | Decimal -> SqlDbType.Decimal
+        | Single -> SqlDbType.Real
     member t.IsReferenceType =
         match t with
-        | Byte | Int16 | Int32 | Int64 | DateTime | Guid | Bool | Double | Decimal -> false
+        | Byte | Int16 | Int32 | Int64 | DateTime | Guid | Bool | Double | Decimal | Single -> false
         | String | ByteArray | UserDefinedTableType _ -> true
     static member FromDotnetType(t: Type) =
         if t = typeof<byte> then Byte
@@ -112,6 +109,7 @@ type SqlType =
         elif t = typeof<byte[]> then ByteArray
         elif t = typeof<double> then Double
         elif t = typeof<Decimal> then Decimal
+        elif t = typeof<single> then Single
         else failwith("Unknown dotnet type: " + t.ToString())
 
 /// An SqlType with annotations: name and nullability

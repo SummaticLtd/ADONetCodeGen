@@ -19,6 +19,7 @@ module private SqlType =
         | SqlType.String -> "string"
         | SqlType.Bool -> "bool"
         | SqlType.ByteArray -> "byte[]"
+        | SqlType.Single -> "single"
         | SqlType.Double -> "double"
         | SqlType.Decimal -> "decimal"
         | SqlType.UserDefinedTableType udtName -> $"ImmutableArray<{udtName}>"
@@ -35,6 +36,7 @@ module private SqlType =
         | SqlType.ByteArray -> $"({reader}.GetValue({index}) :?> byte[])"
         | SqlType.Double -> $"{reader}.GetDouble({index})"
         | SqlType.Decimal -> $"{reader}.GetDecimal({index})"
+        | SqlType.Single -> $"{reader}.GetFloat({index})"
         | SqlType.UserDefinedTableType udttName ->
             $"(let r = {reader}.GetData({index}) in {udttName}.FromReader(r))"
 
