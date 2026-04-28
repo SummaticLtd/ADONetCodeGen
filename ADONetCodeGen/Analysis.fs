@@ -20,31 +20,68 @@ type SqlType =
     | String
     | Bool
     | ByteArray
+    | Single
     | Double
     | Decimal
+    | Timespan
+    | DateTimeOffset
     | UserDefinedTableType of name: string
     static member FromSQL(dt: DataType) =
+        // https://github.com/dotnet/docs/blob/main/docs/framework/data/adonet/sql-server-data-type-mappings.md
         match dt.SqlDataType with
+        | SqlDataType.None -> failwith "SQLDataType.None is not supported"
+        | SqlDataType.BigInt -> Int64
+        | SqlDataType.Bit -> Bool
+        | SqlDataType.DateTime
+        | SqlDataType.DateTime2
+        | SqlDataType.Date
+        | SqlDataType.SmallDateTime
+            -> DateTime
         | SqlDataType.TinyInt -> Byte
         | SqlDataType.SmallInt -> Int16
         | SqlDataType.Int -> Int32
-        | SqlDataType.BigInt -> Int64
-        | SqlDataType.DateTime | SqlDataType.DateTime2 -> DateTime
         | SqlDataType.UniqueIdentifier -> Guid
+        | SqlDataType.Char
+        | SqlDataType.NChar
         | SqlDataType.NVarChar
         | SqlDataType.NVarCharMax
         | SqlDataType.VarChar
-        | SqlDataType.VarCharMax -> String
-        | SqlDataType.Bit -> Bool
+        | SqlDataType.VarCharMax
+        | SqlDataType.Text
+        | SqlDataType.NText
+        | SqlDataType.Json
+            -> String
         | SqlDataType.Binary
         | SqlDataType.VarBinary
-        | SqlDataType.VarBinaryMax -> ByteArray
-        | SqlDataType.Float -> Double
-        | SqlDataType.Timestamp -> ByteArray
-        | SqlDataType.Decimal -> Decimal
+        | SqlDataType.VarBinaryMax
+        | SqlDataType.Timestamp
+        | SqlDataType.Image
+            -> ByteArray
+        | SqlDataType.Real
+            -> Single
+        | SqlDataType.Float
+            -> Double
+        | SqlDataType.Decimal
+        | SqlDataType.Money
+        | SqlDataType.SmallMoney
+        | SqlDataType.Numeric
+            -> Decimal
+        | SqlDataType.Time
+            -> Timespan
+        | SqlDataType.DateTimeOffset
+            -> DateTimeOffset
         | SqlDataType.UserDefinedTableType ->
             UserDefinedTableType dt.Name
-        | x -> failwith("Unknown SQL type: " + x.ToString())
+        | SqlDataType.UserDefinedDataType
+        | SqlDataType.UserDefinedType
+        | SqlDataType.Variant
+        | SqlDataType.Xml
+        | SqlDataType.SysName
+        | SqlDataType.HierarchyId
+        | SqlDataType.Geometry
+        | SqlDataType.Geography
+        | SqlDataType.Vector
+            -> failwith $"{dt.Name} is not supported"
     member t.SqlDbType = // TODO: refine the types here
         match t with
         | Byte -> SqlDbType.TinyInt
