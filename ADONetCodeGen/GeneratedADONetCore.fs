@@ -61,33 +61,33 @@ module GenADO =
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: IDataRecord) = readDataRow record
+        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
 
-    /// A table-valued UDF that returns zero or more rows, each read via ReadDataRow.
+    /// A table-valued UDF
     type TableUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: IDataRecord) = readDataRow record
+        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
 
-    /// A scalar UDF that returns a single value (e.g. int voption, bool voption).
+    /// A scalar UDF
     type ScalarUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readValue: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads the single value from the single-row, single-column result set
-        member _.ReadValue(record: IDataRecord) = readValue record
+        member _.ReadValue(record: SqlDataReader) = readValue record
 
     /// A table getter (SELECT * FROM table) that returns zero or more rows, each read via ReadDataRow.
     /// Has no inputs.
     type TableGetter<'Output>(commandText: string, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: IDataRecord) = readDataRow record
+        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
 
 // ---------------------------------------------------------------
-// IBatchComponent — the unit of composition
+// IBatchComponent
 // ---------------------------------------------------------------
 
 /// A component that can be added to an SqlBatch.
@@ -292,22 +292,38 @@ module Extensions =
 
     type GenADO.StoredProcNonQuery<'Inputs> with
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeStoredProcNonQuery(conn, cmd, input)
-        member cmd.AsBatchSingle(input: 'Inputs) = Batch.Single.nonQuery(cmd, input)
+        member cmd.AsBatch(input: 'Inputs) = Batch.Single.nonQuery(cmd, input)
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.storedProcNonQuery(cmd, data)
 
     type GenADO.StoredProcQuery<'Inputs, 'Output> with
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeStoredProcQuery(conn, cmd, input)
-        member cmd.AsBatchSingle(input: 'Inputs) = Batch.Single.query(cmd, input)
+        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs): Threading.Tasks.Task<'Output voption> =
+            task {
+                let! r = Command.executeStoredProcQuery(conn, cmd, input)
+                return
+                    if r.Length = 0 then ValueNone
+                    elif r.Length = 1 then ValueSome r.[0]
+                    else failwith("Expected at most one result in ExecuteSingle, but got " + string r.Length + " results.")
+            }
+        member cmd.AsBatch(input: 'Inputs) = Batch.Single.query(cmd, input)
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.storedProcQuery(cmd, data)
 
     type GenADO.TableUDF<'Inputs, 'Output> with
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeTableUDF(conn, cmd, input)
-        member cmd.AsBatchSingle(input: 'Inputs) = Batch.Single.tableUDF(cmd, input)
+        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs): Threading.Tasks.Task<'Output voption> =
+            task {
+                let! r = Command.executeTableUDF(conn, cmd, input)
+                return
+                    if r.Length = 0 then ValueNone
+                    elif r.Length = 1 then ValueSome r.[0]
+                    else failwith("Expected at most one result in ExecuteSingle, but got " + string r.Length + " results.")
+            }
+        member cmd.AsBatch(input: 'Inputs) = Batch.Single.tableUDF(cmd, input)
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.tableUDF(cmd, data)
 
     type GenADO.ScalarUDF<'Inputs, 'Output> with
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeScalarUDF(conn, cmd, input)
-        member cmd.AsBatchSingle(input: 'Inputs) = Batch.Single.scalarUDF(cmd, input)
+        member cmd.AsBatch(input: 'Inputs) = Batch.Single.scalarUDF(cmd, input)
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.scalarUDF(cmd, data)
 
     type GenADO.TableGetter<'Output> with
