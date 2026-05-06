@@ -56,7 +56,7 @@ module GenADO =
         member _.CommandParams(input: 'Inputs) = commandParams input
 
     /// A stored procedure that returns zero or more rows, each read via ReadDataRow.
-    type StoredProcQuery<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: IDataRecord -> 'Output) =
+    type StoredProcQuery<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
@@ -64,7 +64,7 @@ module GenADO =
         member _.ReadDataRow(record: IDataRecord) = readDataRow record
 
     /// A table-valued UDF that returns zero or more rows, each read via ReadDataRow.
-    type TableUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: IDataRecord -> 'Output) =
+    type TableUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
@@ -72,7 +72,7 @@ module GenADO =
         member _.ReadDataRow(record: IDataRecord) = readDataRow record
 
     /// A scalar UDF that returns a single value (e.g. int voption, bool voption).
-    type ScalarUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readValue: IDataRecord -> 'Output) =
+    type ScalarUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readValue: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
@@ -81,7 +81,7 @@ module GenADO =
 
     /// A table getter (SELECT * FROM table) that returns zero or more rows, each read via ReadDataRow.
     /// Has no inputs.
-    type TableGetter<'Output>(commandText: string, readDataRow: IDataRecord -> 'Output) =
+    type TableGetter<'Output>(commandText: string, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Reads a single row from the result set
         member _.ReadDataRow(record: IDataRecord) = readDataRow record
