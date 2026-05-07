@@ -5,12 +5,16 @@
 	<OutputType>Library</OutputType>
 	<TargetFramework>net10.0</TargetFramework>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<Version>1.0.1</Version>
+	<Version>1.0.2</Version>
 	<PackageId>ADONetCodeGen</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="GeneratedADONetCore.fs" />
+	<None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Compile Include="GeneratedADONetCore.fs" />
     <Compile Include="Analysis.fs" />
     <Compile Include="Codegen.fs" />
   </ItemGroup>
