@@ -23,22 +23,23 @@ module private SqlType =
         | SqlType.Double -> "double"
         | SqlType.Decimal -> "decimal"
         | SqlType.UserDefinedTableType udtName -> $"ImmutableArray<{udtName}>"
-    let getterStr(sqlType: SqlType, reader: string, index: int) =
+    /// Reads from an SqlDataReader with name 'reader'
+    let getterStr(sqlType: SqlType, index: int) =
         match sqlType with
-        | SqlType.Byte -> $"{reader}.GetByte({index})"
-        | SqlType.Int16 -> $"{reader}.GetInt16({index})"
-        | SqlType.Int32 -> $"{reader}.GetInt32({index})"
-        | SqlType.Int64 -> $"{reader}.GetInt64({index})"
-        | SqlType.DateTime -> $"{reader}.GetDateTime({index})"
-        | SqlType.Guid -> $"{reader}.GetGuid({index})"
-        | SqlType.String -> $"{reader}.GetString({index})"
-        | SqlType.Bool -> $"{reader}.GetBoolean({index})"
-        | SqlType.ByteArray -> $"{reader}.GetSqlBinary({index}).Value"
-        | SqlType.Double -> $"{reader}.GetDouble({index})"
-        | SqlType.Decimal -> $"{reader}.GetDecimal({index})"
-        | SqlType.Single -> $"{reader}.GetFloat({index})"
+        | SqlType.Byte -> $"reader.GetByte({index})"
+        | SqlType.Int16 -> $"reader.GetInt16({index})"
+        | SqlType.Int32 -> $"reader.GetInt32({index})"
+        | SqlType.Int64 -> $"reader.GetInt64({index})"
+        | SqlType.DateTime -> $"reader.GetDateTime({index})"
+        | SqlType.Guid -> $"reader.GetGuid({index})"
+        | SqlType.String -> $"reader.GetString({index})"
+        | SqlType.Bool -> $"reader.GetBoolean({index})"
+        | SqlType.ByteArray -> $"reader.GetSqlBinary({index}).Value"
+        | SqlType.Double -> $"reader.GetDouble({index})"
+        | SqlType.Decimal -> $"reader.GetDecimal({index})"
+        | SqlType.Single -> $"reader.GetFloat({index})"
         | SqlType.UserDefinedTableType udttName ->
-            $"(let r = {reader}.GetData({index}) in {udttName}.FromReader(r))"
+            $"(let r = reader.GetData({index}) in {udttName}.FromReader(r))"
 
 module private NamedType =
     let formatWithType(nt: NamedType) = nt.Name + ": " + SqlType.dotnetTypeStr(nt.SqlType) + (if nt.Nullable then " voption" else "")
@@ -61,11 +62,11 @@ module private NamedType =
             if nt.SqlType.IsReferenceType then ($"(match {nt.Name} with | ValueSome x -> x :> (obj | null) | ValueNone -> null)")
             else ($"(match {nt.Name} with | ValueSome x -> Nullable(x) | ValueNone -> Nullable())")
         else nt.Name
-    let readParameterCode(nt: NamedType, reader: string, position: int) =
+    let readParameterCode(nt: NamedType, position: int) =
         if nt.Nullable then
-            $"(if {reader}.IsDBNull({position}) then ValueNone else ValueSome({SqlType.getterStr(nt.SqlType, reader, position)}))"
+            $"(if reader.IsDBNull({position}) then ValueNone else ValueSome({SqlType.getterStr(nt.SqlType, position)}))"
         else
-            $"{SqlType.getterStr(nt.SqlType, reader, position)}"
+            $"{SqlType.getterStr(nt.SqlType, position)}"
     let toSqlParameter(nt: NamedType) =
         match nt.SqlType with
         | SqlType.UserDefinedTableType udttName ->
@@ -76,13 +77,13 @@ module private NamedType =
 module private Helpers =
     let memberExpr(name: string) = "    member _." + name + " = " + name
     let readSingleRow(nts: NamedType list, outputTypeName: string) =
-        let inputs = nts |> Seq.mapi(fun i nt -> NamedType.readParameterCode(nt, "reader", i)) |> String.concat ", "
+        let inputs = nts |> Seq.mapi(fun i nt -> NamedType.readParameterCode(nt, i)) |> String.concat ", "
         $"{outputTypeName}({inputs})"
 
 module private UserDefinedTableT =
     let fSharpTypeDef(udtt: UserDefinedTableT) =
         let readSingleRow =
-            udtt.Cols |> List.mapi(fun i col -> NamedType.readParameterCode(col, "reader", i)) |> String.concat ", "
+            udtt.Cols |> List.mapi(fun i col -> NamedType.readParameterCode(col, i)) |> String.concat ", "
         let writeRow =
             udtt.Cols |> List.map(fun col -> "row." + col.Name) |> String.concat ", "
         [   yield $"type {udtt.Name}({NamedType.formatParameters(udtt.Cols, FormatParameterOption.Dotnet(true, false))}) ="
@@ -160,37 +161,37 @@ module private Command =
                     yield $"        GenADO.StoredProcNonQuery<{inputTypeName}>(\"{commandTextStr}\", {commandParamsExpr})" ]
 
             | CommandTy.StoredProc, Return.Table(nts, _) ->
-                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, "record", i)) |> String.concat ", "
+                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, i)) |> String.concat ", "
                 [   yield $"    let Command ="
                     yield $"        GenADO.StoredProcQuery<{inputTypeName}, Output>("
                     yield $"            \"{commandTextStr}\","
                     yield $"            {commandParamsExpr},"
-                    yield $"            (fun record -> Output({readRow})))" ]
+                    yield $"            (fun reader -> Output({readRow})))" ]
 
             | CommandTy.UDF, Return.Table(nts, _) ->
-                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, "record", i)) |> String.concat ", "
+                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, i)) |> String.concat ", "
                 [   yield $"    let Command ="
                     yield $"        GenADO.TableUDF<{inputTypeName}, Output>("
                     yield $"            \"{commandTextStr}\","
                     yield $"            {commandParamsExpr},"
-                    yield $"            (fun record -> Output({readRow})))" ]
+                    yield $"            (fun reader -> Output({readRow})))" ]
 
             | CommandTy.UDF, Return.Single(sqlType, nullable) ->
                 let outputTypeStr =
                     let t = SqlType.dotnetTypeStr sqlType
                     if nullable then $"{t} voption" else t
-                let read = SqlType.getterStr(sqlType, "record", 0)
-                let result = if nullable then $"if record.IsDBNull(0) then ValueNone else ValueSome({read})" else read
+                let read = SqlType.getterStr(sqlType, 0)
+                let result = if nullable then $"if reader.IsDBNull(0) then ValueNone else ValueSome({read})" else read
                 [   yield $"    let Command ="
                     yield $"        GenADO.ScalarUDF<{inputTypeName}, {outputTypeStr}>("
                     yield $"            \"{commandTextStr}\","
                     yield $"            {commandParamsExpr},"
-                    yield $"            (fun record -> {result}))" ]
+                    yield $"            (fun reader -> {result}))" ]
 
             | CommandTy.TableGetter, Return.Table(nts, _) ->
-                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, "record", i)) |> String.concat ", "
+                let readRow = nts |> List.mapi(fun i nt -> NamedType.readParameterCode(nt, i)) |> String.concat ", "
                 [   yield $"    let Command ="
-                    yield $"        GenADO.TableGetter<Output>(\"{commandTextStr}\", (fun record -> Output({readRow})))" ]
+                    yield $"        GenADO.TableGetter<Output>(\"{commandTextStr}\", (fun reader -> Output({readRow})))" ]
 
             | CommandTy.SqlCommand _, _ ->
                 failwith "SqlCommand code generation is not supported via the new interfaces"

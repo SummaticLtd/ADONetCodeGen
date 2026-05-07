@@ -5,12 +5,19 @@
 	<OutputType>Library</OutputType>
 	<TargetFramework>net10.0</TargetFramework>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<Version>1.0.0</Version>
+	<Version>1.0.3</Version>
 	<PackageId>ADONetCodeGen</PackageId>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<RepositoryUrl>https://github.com/SummaticLtd/ADONetCodeGen</RepositoryUrl>
+	<PackageProjectUrl>https://github.com/SummaticLtd/ADONetCodeGen</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="GeneratedADONetCore.fs" />
+	<None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Compile Include="GeneratedADONetCore.fs" />
     <Compile Include="Analysis.fs" />
     <Compile Include="Codegen.fs" />
   </ItemGroup>
