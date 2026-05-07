@@ -61,7 +61,7 @@ module GenADO =
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
+        member _.ReadDataRow(reader: SqlDataReader) = readDataRow reader
 
     /// A table-valued UDF
     type TableUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readDataRow: SqlDataReader -> 'Output) =
@@ -69,7 +69,7 @@ module GenADO =
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
+        member _.ReadDataRow(reader: SqlDataReader) = readDataRow reader
 
     /// A scalar UDF
     type ScalarUDF<'Inputs, 'Output>(commandText: string, commandParams: 'Inputs -> ImmutableArray<SqlParameter>, readValue: SqlDataReader -> 'Output) =
@@ -77,14 +77,14 @@ module GenADO =
         /// Produces the SqlParameters for a given set of inputs
         member _.CommandParams(input: 'Inputs) = commandParams input
         /// Reads the single value from the single-row, single-column result set
-        member _.ReadValue(record: SqlDataReader) = readValue record
+        member _.ReadValue(reader: SqlDataReader) = readValue reader
 
     /// A table getter (SELECT * FROM table) that returns zero or more rows, each read via ReadDataRow.
     /// Has no inputs.
     type TableGetter<'Output>(commandText: string, readDataRow: SqlDataReader -> 'Output) =
         member _.CommandText = commandText
         /// Reads a single row from the result set
-        member _.ReadDataRow(record: SqlDataReader) = readDataRow record
+        member _.ReadDataRow(reader: SqlDataReader) = readDataRow reader
 
 // ---------------------------------------------------------------
 // IBatchComponent
