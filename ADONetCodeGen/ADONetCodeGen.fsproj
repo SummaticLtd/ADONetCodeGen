@@ -5,8 +5,11 @@
 	<OutputType>Library</OutputType>
 	<TargetFramework>net10.0</TargetFramework>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<Version>1.0.2</Version>
+	<Version>1.0.3</Version>
 	<PackageId>ADONetCodeGen</PackageId>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<RepositoryUrl>https://github.com/SummaticLtd/ADONetCodeGen</RepositoryUrl>
+	<PackageProjectUrl>https://github.com/SummaticLtd/ADONetCodeGen</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
