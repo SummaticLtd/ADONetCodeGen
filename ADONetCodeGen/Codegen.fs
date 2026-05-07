@@ -33,7 +33,7 @@ module private SqlType =
         | SqlType.Guid -> $"{reader}.GetGuid({index})"
         | SqlType.String -> $"{reader}.GetString({index})"
         | SqlType.Bool -> $"{reader}.GetBoolean({index})"
-        | SqlType.ByteArray -> $"({reader}.GetValue({index}) :?> byte[])"
+        | SqlType.ByteArray -> $"{reader}.GetSqlBinary({index}).Value"
         | SqlType.Double -> $"{reader}.GetDouble({index})"
         | SqlType.Decimal -> $"{reader}.GetDecimal({index})"
         | SqlType.Single -> $"{reader}.GetFloat({index})"
