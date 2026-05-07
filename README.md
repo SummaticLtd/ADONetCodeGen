@@ -81,6 +81,5 @@ If you are missing a feature in ADONetCodeGen, please request one and contribute
 ### When should I use this project or Facil?
 
 - Facil is very well tested, while currently ADONetCodeGen is only tested via database tests inside private SummaticLtd repos.
-- Facil has more complete support for `SqlDbType`s while ADONetCodeGen only supports a common subset at present.
 - ADONetCodeGen supports user-defined functions.
 - ADONetCodeGen supports batching.

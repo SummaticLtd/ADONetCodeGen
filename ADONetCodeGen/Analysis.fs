@@ -23,6 +23,8 @@ type SqlType =
     | Single
     | Double
     | Decimal
+    | DateTimeOffset
+    | TimeSpan
     | UserDefinedTableType of name: string
     static member FromSQL(dt: DataType) =
         // https://github.com/dotnet/docs/blob/main/docs/framework/data/adonet/sql-server-data-type-mappings.md
@@ -48,6 +50,8 @@ type SqlType =
         | SqlDataType.Text
         | SqlDataType.NText
         | SqlDataType.Json
+        | SqlDataType.Xml
+        | SqlDataType.SysName
             -> String
         | SqlDataType.Binary
         | SqlDataType.VarBinary
@@ -66,18 +70,22 @@ type SqlType =
             -> Decimal
         | SqlDataType.UserDefinedTableType ->
             UserDefinedTableType dt.Name
-        | SqlDataType.UserDefinedDataType
-        | SqlDataType.UserDefinedType
-        | SqlDataType.Variant
-        | SqlDataType.Xml
-        | SqlDataType.SysName
-        | SqlDataType.HierarchyId
-        | SqlDataType.Geometry
-        | SqlDataType.Geography
-        | SqlDataType.Vector
-        | SqlDataType.Time
         | SqlDataType.DateTimeOffset
-            -> failwith $"{dt.Name} is not supported"
+            -> DateTimeOffset
+        | SqlDataType.Time
+            -> TimeSpan
+        // Cases not supported but implementable
+        | SqlDataType.UserDefinedDataType // aliases for built-in types; requires SMO introspection to resolve the underlying type
+        | SqlDataType.HierarchyId // requires Microsoft.SqlServer.Types assembly
+        | SqlDataType.Geometry // requires Microsoft.SqlServer.Types assembly
+        | SqlDataType.Geography // requires Microsoft.SqlServer.Types assembly
+        | SqlDataType.Vector // SQL Server 2025; GetSqlVector<T> has fake generics suggesting future element types beyond float
+            -> failwith $"{dt.Name} is not currently implemented by ADONetCodeGenerator"
+        // Cases not within the current scope of ADONetCodeGenerator
+        | SqlDataType.Variant // sql_variant; can hold many different types at runtime, so fundamentally type-unsafe
+        | SqlDataType.UserDefinedType // CLR UDTs
+            -> failwith $"{dt.Name} is not supported by ADONetCodeGenerator"
+
     member t.SqlDbType = // TODO: refine the types here
         match t with
         | Byte -> SqlDbType.TinyInt
@@ -92,10 +100,12 @@ type SqlType =
         | Double -> SqlDbType.Float
         | UserDefinedTableType _ -> SqlDbType.Udt
         | Decimal -> SqlDbType.Decimal
+        | DateTimeOffset -> SqlDbType.DateTimeOffset
+        | TimeSpan -> SqlDbType.Time
         | Single -> SqlDbType.Real
     member t.IsReferenceType =
         match t with
-        | Byte | Int16 | Int32 | Int64 | DateTime | Guid | Bool | Double | Decimal | Single -> false
+        | Byte | Int16 | Int32 | Int64 | DateTime | DateTimeOffset | TimeSpan | Guid | Bool | Double | Decimal | Single -> false
         | String | ByteArray | UserDefinedTableType _ -> true
     static member FromDotnetType(t: Type) =
         if t = typeof<byte> then Byte
@@ -110,6 +120,8 @@ type SqlType =
         elif t = typeof<double> then Double
         elif t = typeof<Decimal> then Decimal
         elif t = typeof<single> then Single
+        elif t = typeof<DateTimeOffset> then DateTimeOffset
+        elif t = typeof<TimeSpan> then TimeSpan
         else failwith("Unknown dotnet type: " + t.ToString())
 
 /// An SqlType with annotations: name and nullability
