@@ -29,7 +29,6 @@ type SqlType =
     static member FromSQL(dt: DataType) =
         // https://github.com/dotnet/docs/blob/main/docs/framework/data/adonet/sql-server-data-type-mappings.md
         match dt.SqlDataType with
-        | SqlDataType.None -> failwith "SQLDataType.None is not supported"
         | SqlDataType.BigInt -> Int64
         | SqlDataType.Bit -> Bool
         | SqlDataType.DateTime
@@ -80,11 +79,12 @@ type SqlType =
         | SqlDataType.Geometry // requires Microsoft.SqlServer.Types assembly
         | SqlDataType.Geography // requires Microsoft.SqlServer.Types assembly
         | SqlDataType.Vector // SQL Server 2025; GetSqlVector<T> has fake generics suggesting future element types beyond float
-            -> failwith $"{dt.Name} is not currently implemented by ADONetCodeGenerator"
+            -> failwith $"{dt.Name} is not currently implemented by ADONetCodeGen"
         // Cases not within the current scope of ADONetCodeGenerator
         | SqlDataType.Variant // sql_variant; can hold many different types at runtime, so fundamentally type-unsafe
         | SqlDataType.UserDefinedType // CLR UDTs
-            -> failwith $"{dt.Name} is not supported by ADONetCodeGenerator"
+        | SqlDataType.None
+            -> failwith $"{dt.Name} is not supported by ADONetCodeGen"
 
     member t.SqlDbType = // TODO: refine the types here
         match t with
