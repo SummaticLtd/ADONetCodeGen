@@ -291,12 +291,18 @@ module Command =
 module Extensions =
 
     type GenADO.StoredProcNonQuery<'Inputs> with
+        /// Executes the stored procedure and returns the number of records affected.
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeStoredProcNonQuery(conn, cmd, input)
+        /// Executes the stored procedure as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
+        /// The batch component returns the number of records affected by the stored procedure.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.nonQuery(cmd, input)
+        /// Executes the stored procedure for each set of inputs in data as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.storedProcNonQuery(cmd, data)
 
     type GenADO.StoredProcQuery<'Inputs, 'Output> with
+        /// Executes the stored procedure and returns the results as an ImmutableArray of 'Output.
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeStoredProcQuery(conn, cmd, input)
+        /// Executes the stored procedure and returns the single result, or ValueNone if zero results. Throws an exception if more than one result is returned.
         member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs): Threading.Tasks.Task<'Output voption> =
             task {
                 let! r = Command.executeStoredProcQuery(conn, cmd, input)
@@ -305,11 +311,15 @@ module Extensions =
                     elif r.Length = 1 then ValueSome r.[0]
                     else failwith("Expected at most one result in ExecuteSingle, but got " + string r.Length + " results.")
             }
+        /// Executes the stored procedure as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.query(cmd, input)
+        /// Executes the stored procedure for each set of inputs in data as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.storedProcQuery(cmd, data)
 
     type GenADO.TableUDF<'Inputs, 'Output> with
+        /// Executes the table UDF and returns the results as an ImmutableArray of 'Output.
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeTableUDF(conn, cmd, input)
+        /// Executes the table UDF and returns the single result, or ValueNone if zero results. Throws an exception if more than one result is returned.
         member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs): Threading.Tasks.Task<'Output voption> =
             task {
                 let! r = Command.executeTableUDF(conn, cmd, input)
@@ -318,13 +328,19 @@ module Extensions =
                     elif r.Length = 1 then ValueSome r.[0]
                     else failwith("Expected at most one result in ExecuteSingle, but got " + string r.Length + " results.")
             }
+        /// Executes the table UDF as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.tableUDF(cmd, input)
+        /// Executes the table UDF for each set of inputs in data as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.tableUDF(cmd, data)
 
     type GenADO.ScalarUDF<'Inputs, 'Output> with
+        /// Executes the scalar UDF and returns the result as 'Output.
         member cmd.Execute(conn: ISqlConnection, input: 'Inputs) = Command.executeScalarUDF(conn, cmd, input)
+        /// Executes the scalar UDF as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.scalarUDF(cmd, input)
+        /// Executes the scalar UDF for each set of inputs in data as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatchHomogeneous(data: ImmutableArray<'Inputs>) = Batch.Homogeneous.scalarUDF(cmd, data)
 
     type GenADO.TableGetter<'Output> with
+        /// Executes the table getter, returning all rows of the table as an ImmutableArray of 'Output.
         member cmd.Execute(conn: ISqlConnection) = Command.executeTableGetter(conn, cmd)
