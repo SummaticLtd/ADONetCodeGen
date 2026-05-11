@@ -271,17 +271,22 @@ module Command =
         }
 
     let executeBatch<'T>(conn: ISqlConnection, comp: BatchComponent<'T>) : Threading.Tasks.Task<'T> =
-        task {
-            use batch = new SqlBatch(conn.Connection)
-            conn.Transaction |> Option.iter(fun t -> batch.Transaction <- t)
-            for (text, cmdType, parameters) in comp.Commands do
-                let cmd = SqlBatchCommand(text, cmdType)
-                for p in parameters do
-                    cmd.Parameters.Add(p) |> ignore
-                batch.BatchCommands.Add(cmd)
-            use! reader = batch.ExecuteReaderAsync()
-            return comp.ReadData reader
-        }
+        if comp.Commands.IsEmpty then
+            // SqlBatch throws if executed with no commands. Short-circuit by calling ReadData with a null
+            // reader. Safe because any ReadData that produces zero commands never reads from the reader.
+            comp.ReadData Unchecked.defaultof<SqlDataReader> |> Threading.Tasks.Task.FromResult
+        else
+            task {
+                use batch = new SqlBatch(conn.Connection)
+                conn.Transaction |> Option.iter(fun t -> batch.Transaction <- t)
+                for (text, cmdType, parameters) in comp.Commands do
+                    let cmd = SqlBatchCommand(text, cmdType)
+                    for p in parameters do
+                        cmd.Parameters.Add(p) |> ignore
+                    batch.BatchCommands.Add(cmd)
+                use! reader = batch.ExecuteReaderAsync()
+                return comp.ReadData reader
+            }
 
 // ---------------------------------------------------------------
 // Extension methods
