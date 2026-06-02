@@ -11,6 +11,7 @@
     <Compile Include="TestSupport.fs" />
     <Compile Include="DbCodegenTest.fs" />
     <Compile Include="UdfTest.fs" />
+    <Compile Include="ScalarTypeTests.fs" />
     <Compile Include="EntryPoint.fs" />
   </ItemGroup>
 
