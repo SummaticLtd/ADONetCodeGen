@@ -14,6 +14,7 @@
     <Compile Include="ScalarTypeTests.fs" />
     <Compile Include="TableUdfTests.fs" />
     <Compile Include="StoredProcTests.fs" />
+    <Compile Include="BatchTests.fs" />
     <Compile Include="EntryPoint.fs" />
   </ItemGroup>
 
