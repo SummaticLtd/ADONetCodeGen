@@ -62,9 +62,11 @@ module private NamedType =
         name + "(" + (formatParameters(parameters, fpo)) + ")"
 
     let formatToDotnetInput(nt: NamedType) =
+        // For a NULL value, SqlParameter.Value must be DBNull.Value: a CLR null (or an empty
+        // Nullable, which boxes to null) is treated by SqlClient as "parameter not supplied".
         if nt.Nullable then
-            if nt.SqlType.IsReferenceType then ($"(match {nt.Name} with | ValueSome x -> x :> (obj | null) | ValueNone -> null)")
-            else ($"(match {nt.Name} with | ValueSome x -> Nullable(x) | ValueNone -> Nullable())")
+            if nt.SqlType.IsReferenceType then ($"(match {nt.Name} with | ValueSome x -> x :> obj | ValueNone -> DBNull.Value :> obj)")
+            else ($"(match {nt.Name} with | ValueSome x -> Nullable(x) :> obj | ValueNone -> DBNull.Value :> obj)")
         else nt.Name
     let readParameterCode(nt: NamedType, position: int) =
         if nt.Nullable then

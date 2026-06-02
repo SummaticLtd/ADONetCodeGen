@@ -57,5 +57,17 @@ let private manyTypedInputs =
             Assert.Equal(ValueSome true, result)
         })
 
+/// A nullable input that is echoed back. The scalar return is always nullable, so this
+/// covers both a nullable input (ValueNone -> NULL) and a nullable output (NULL -> ValueNone).
+let private nullableRoundTrip =
+    Test.Async("nullable int (Some and None)", fun () ->
+        task {
+            use! conn = GetDbConn()
+            let! some = EchoNullableInt.Command.Execute(conn, EchoNullableInt.Input(ValueSome 42))
+            Assert.Equal(ValueSome 42, some)
+            let! none = EchoNullableInt.Command.Execute(conn, EchoNullableInt.Input ValueNone)
+            Assert.Equal((ValueNone: int voption), none)
+        })
+
 let ScalarTypeTestList =
-    TestList("ScalarTypeTests", echoTests @ [ manyTypedInputs ])
+    TestList("ScalarTypeTests", echoTests @ [ manyTypedInputs; nullableRoundTrip ])

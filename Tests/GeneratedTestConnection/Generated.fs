@@ -1,4 +1,4 @@
-﻿// Sql Hash: 6bc21fe9185a13ed
+﻿// Sql Hash: 4c8b589cb0918987
 // This code is auto-generated
 namespace GeneratedADONET.dbo
 open System
@@ -117,6 +117,18 @@ module EchoNVarChar =
             "SELECT [dbo].[EchoNVarChar](@value)",
             (fun i -> i.CommandParams),
             (fun reader -> if reader.IsDBNull(0) then ValueNone else ValueSome(reader.GetString(0))))
+[<RequireQualifiedAccess>]
+module EchoNullableInt =
+    type Input(value: int voption) =
+        member _.CommandParams =
+            ImmutableArray.Create<SqlParameter>(
+                SqlParameter("@value", SqlDbType.Int, Value = (match value with | ValueSome x -> Nullable(x) :> obj | ValueNone -> DBNull.Value :> obj))
+            )
+    let Command =
+        GenADO.ScalarUDF<Input, int voption>(
+            "SELECT [dbo].[EchoNullableInt](@value)",
+            (fun i -> i.CommandParams),
+            (fun reader -> if reader.IsDBNull(0) then ValueNone else ValueSome(reader.GetInt32(0))))
 [<RequireQualifiedAccess>]
 module EchoReal =
     type Input(value: single) =
