@@ -77,9 +77,3 @@ If you would like to use it from C#, please open an issue and it will be easy to
 ### I'm missing feature X, can you add it?
 
 If you are missing a feature in ADONetCodeGen, please request one and contribute. It is an easy library to contribute to, since analysis and codegen are separated.
-
-### When should I use this project or Facil?
-
-- Facil is very well tested, while currently ADONetCodeGen is only tested via database tests inside private SummaticLtd repos.
-- ADONetCodeGen supports user-defined functions.
-- ADONetCodeGen supports batching.
