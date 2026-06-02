@@ -1,7 +1,9 @@
 <Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <SqlServerVersion>Sql160</SqlServerVersion>
+        <!-- Sql150 (SQL Server 2019) is the floor for the localdb on GitHub's windows runners.
+             A lower target still deploys fine to newer servers, so this works everywhere. -->
+        <SqlServerVersion>Sql150</SqlServerVersion>
         <TreatTSqlWarningsAsErrors>True</TreatTSqlWarningsAsErrors>
         <TargetServerName>(localdb)\MSSQLLocalDB</TargetServerName>
         <TargetDatabaseName>ADONetCodeGenTest</TargetDatabaseName>
