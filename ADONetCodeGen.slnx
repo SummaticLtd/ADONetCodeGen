@@ -3,4 +3,9 @@
     <File Path="Directory.Build.props" />
   </Folder>
   <Project Path="ADONetCodeGen/ADONetCodeGen.fsproj" />
+  <Folder Name="/Tests/">
+    <Project Path="Tests/TestSql/TestSql.sqlproj" />
+    <Project Path="Tests/GeneratedTestConnection/GeneratedTestConnection.fsproj" />
+    <Project Path="Tests/Tests/Tests.fsproj" />
+  </Folder>
 </Solution>
