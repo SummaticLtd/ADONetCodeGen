@@ -33,10 +33,11 @@ jobs:
           sqllocaldb start MSSQLLocalDB
           sqllocaldb info MSSQLLocalDB
 
-      # Building the solution also deploys the TestSql dacpac to localdb (the sqlproj's
-      # AfterBuild target), so the database is ready before the tests run.
-      - name: Build (deploys TestSql to localdb)
-        run: dotnet build ADONetCodeGen.slnx
+      # Build the SQL project explicitly: its AfterBuild target deploys the dacpac to localdb,
+      # creating the ADONetCodeGenTest database the tests use. (A solution build skips the
+      # MSBuild.Sdk.SqlProj project, so this must be its own step.)
+      - name: Build and deploy TestSql to localdb
+        run: dotnet build Tests/TestSql/TestSql.sqlproj
 
       - name: Run tests
-        run: dotnet run --project Tests/Tests/Tests.fsproj --no-build
+        run: dotnet run --project Tests/Tests/Tests.fsproj
