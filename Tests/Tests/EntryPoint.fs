@@ -7,6 +7,7 @@ let testFolders = [
     TestFolder("Tests.UdfTest", [ Tests.UdfTest.UdfTestList ])
     TestFolder("Tests.ScalarTypeTests", [ Tests.ScalarTypeTests.ScalarTypeTestList ])
     TestFolder("Tests.TableUdfTests", [ Tests.TableUdfTests.TableUdfTestList ])
+    TestFolder("Tests.StoredProcTests", [ Tests.StoredProcTests.StoredProcTestList ])
 ]
 
 [<EntryPoint>]

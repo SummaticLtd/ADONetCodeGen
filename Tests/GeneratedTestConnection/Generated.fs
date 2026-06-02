@@ -1,4 +1,4 @@
-﻿// Sql Hash: 5ea9724adc1466d9
+﻿// Sql Hash: e8a25f499bae1298
 // This code is auto-generated
 namespace GeneratedADONET.dbo
 open System
@@ -6,6 +6,35 @@ open System.Data
 open Microsoft.Data.SqlClient
 open System.Collections.Immutable
 open ADONetCodeGen.Core
+// -----------------
+// Stored Procedures
+// -----------------
+[<RequireQualifiedAccess>]
+module GetWidgetsOver =
+    type Input(minPrice: decimal) =
+        member _.CommandParams =
+            ImmutableArray.Create<SqlParameter>(
+                SqlParameter("@minPrice", SqlDbType.Decimal, Value = minPrice)
+            )
+    type Output(Id: int, Name: string, Price: decimal) =
+        member _.Id = Id
+        member _.Name = Name
+        member _.Price = Price
+    let Command =
+        GenADO.StoredProcQuery<Input, Output>(
+            "[dbo].[GetWidgetsOver]",
+            (fun i -> i.CommandParams),
+            (fun reader -> Output(reader.GetInt32(0), reader.GetString(1), reader.GetDecimal(2))))
+[<RequireQualifiedAccess>]
+module InsertWidget =
+    type Input(name: string, price: decimal) =
+        member _.CommandParams =
+            ImmutableArray.Create<SqlParameter>(
+                SqlParameter("@name", SqlDbType.NVarChar, Value = name),
+                SqlParameter("@price", SqlDbType.Decimal, Value = price)
+            )
+    let Command =
+        GenADO.StoredProcNonQuery<Input>("[dbo].[InsertWidget]", (fun i -> i.CommandParams))
 // ----------------------
 // User Defined Functions
 // ----------------------
@@ -239,3 +268,20 @@ module NumbersUpTo =
             "SELECT * FROM [dbo].[NumbersUpTo](@count)",
             (fun i -> i.CommandParams),
             (fun reader -> Output(reader.GetInt32(0), reader.GetInt64(1), reader.GetString(2), (if reader.IsDBNull(3) then ValueNone else ValueSome(reader.GetInt32(3))))))
+// -------------
+// Table Getters
+// -------------
+namespace GeneratedADONET.dbo.TableGetters
+open System
+open System.Data
+open Microsoft.Data.SqlClient
+open System.Collections.Immutable
+open ADONetCodeGen.Core
+[<RequireQualifiedAccess>]
+module Widget =
+    type Output(Id: int, Name: string, Price: decimal) =
+        member _.Id = Id
+        member _.Name = Name
+        member _.Price = Price
+    let Command =
+        GenADO.TableGetter<Output>("SELECT * FROM [dbo].[Widget]", (fun reader -> Output(reader.GetInt32(0), reader.GetString(1), reader.GetDecimal(2))))

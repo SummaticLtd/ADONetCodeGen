@@ -17,3 +17,13 @@ let GetDbConn() =
         do! sqlConnection.OpenAsync()
         return new SqlConn(sqlConnection)
     }
+
+/// Opens a connection with an open transaction. Tests that mutate the database use this and
+/// roll back at the end, keeping the persistent localdb instance clean across runs.
+let GetDbConnInTransaction() =
+    task {
+        let sqlConnection = new SqlConnection(designTimeConn)
+        do! sqlConnection.OpenAsync()
+        let tran = sqlConnection.BeginTransaction()
+        return new SqlConnWithTransaction(sqlConnection, tran)
+    }
