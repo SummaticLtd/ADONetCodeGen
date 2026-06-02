@@ -1,4 +1,4 @@
-﻿// Sql Hash: 4c8b589cb0918987
+﻿// Sql Hash: 5ea9724adc1466d9
 // This code is auto-generated
 namespace GeneratedADONET.dbo
 open System
@@ -222,3 +222,20 @@ module ManyTypedInputs =
             "SELECT [dbo].[ManyTypedInputs](@theByte, @theInt, @theBigInt, @theBit, @theDouble, @theDecimal, @theGuid, @theText, @theTime, @theStamp)",
             (fun i -> i.CommandParams),
             (fun reader -> if reader.IsDBNull(0) then ValueNone else ValueSome(reader.GetBoolean(0))))
+[<RequireQualifiedAccess>]
+module NumbersUpTo =
+    type Input(count: int) =
+        member _.CommandParams =
+            ImmutableArray.Create<SqlParameter>(
+                SqlParameter("@count", SqlDbType.Int, Value = count)
+            )
+    type Output(Value: int, Square: int64, Label: string, Maybe: int voption) =
+        member _.Value = Value
+        member _.Square = Square
+        member _.Label = Label
+        member _.Maybe = Maybe
+    let Command =
+        GenADO.TableUDF<Input, Output>(
+            "SELECT * FROM [dbo].[NumbersUpTo](@count)",
+            (fun i -> i.CommandParams),
+            (fun reader -> Output(reader.GetInt32(0), reader.GetInt64(1), reader.GetString(2), (if reader.IsDBNull(3) then ValueNone else ValueSome(reader.GetInt32(3))))))
