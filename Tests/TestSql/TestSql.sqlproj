@@ -1,0 +1,22 @@
+<Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <SqlServerVersion>Sql160</SqlServerVersion>
+        <TreatTSqlWarningsAsErrors>True</TreatTSqlWarningsAsErrors>
+        <TargetServerName>(localdb)\MSSQLLocalDB</TargetServerName>
+        <TargetDatabaseName>ADONetCodeGenTest</TargetDatabaseName>
+        <GenerateSmartDefaults>True</GenerateSmartDefaults>
+        <DropObjectsNotInSource>True</DropObjectsNotInSource>
+        <DropIndexesNotInSource>True</DropIndexesNotInSource>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="**/*.sql" />
+    </ItemGroup>
+
+    <!-- Deploy the dacpac to localdb after every build, mirroring the SummaticApp build process. -->
+    <Target Name="PublishAfterBuild" AfterTargets="Build">
+        <Copy SourceFiles="$(TargetDir)TestSql.dacpac" DestinationFolder="$(ProjectDir)bin/dacpac" />
+        <CallTarget Targets="PublishDatabase" />
+    </Target>
+</Project>

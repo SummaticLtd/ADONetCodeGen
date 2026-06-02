@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="TestSupport.fs" />
+    <Compile Include="DbCodegenTest.fs" />
+    <Compile Include="UdfTest.fs" />
+    <Compile Include="EntryPoint.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SimpleTests" Version="0.1.0" />
+    <PackageReference Include="MurmurHash-net-core" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratedTestConnection\GeneratedTestConnection.fsproj" />
+  </ItemGroup>
+
+</Project>
