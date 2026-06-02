@@ -122,7 +122,7 @@ module EchoNullableInt =
     type Input(value: int voption) =
         member _.CommandParams =
             ImmutableArray.Create<SqlParameter>(
-                SqlParameter("@value", SqlDbType.Int, Value = (match value with | ValueSome x -> Nullable(x) :> obj | ValueNone -> DBNull.Value :> obj))
+                SqlParameter("@value", SqlDbType.Int, Value = (match value with | ValueSome x -> box x | ValueNone -> box DBNull.Value))
             )
     let Command =
         GenADO.ScalarUDF<Input, int voption>(

@@ -61,13 +61,6 @@ module private NamedType =
     let printFnWithParameters(name: string, parameters: NamedType seq, fpo: FormatParameterOption) =
         name + "(" + (formatParameters(parameters, fpo)) + ")"
 
-    let formatToDotnetInput(nt: NamedType) =
-        // For a NULL value, SqlParameter.Value must be DBNull.Value: a CLR null (or an empty
-        // Nullable, which boxes to null) is treated by SqlClient as "parameter not supplied".
-        if nt.Nullable then
-            if nt.SqlType.IsReferenceType then ($"(match {nt.Name} with | ValueSome x -> x :> obj | ValueNone -> DBNull.Value :> obj)")
-            else ($"(match {nt.Name} with | ValueSome x -> Nullable(x) :> obj | ValueNone -> DBNull.Value :> obj)")
-        else nt.Name
     let readParameterCode(nt: NamedType, position: int) =
         if nt.Nullable then
             $"(if reader.IsDBNull({position}) then ValueNone else ValueSome({SqlType.getterStr(nt.SqlType, position)}))"
@@ -76,9 +69,14 @@ module private NamedType =
     let toSqlParameter(nt: NamedType) =
         match nt.SqlType with
         | SqlType.UserDefinedTableType udttName ->
-            $"SqlParameter(\"{nt.SqlParameterName}\", Data.SqlDbType.Structured, TypeName = \"{udttName}\", Value = {udttName}.ToDataTable({formatToDotnetInput nt}))"
+            $"SqlParameter(\"{nt.SqlParameterName}\", Data.SqlDbType.Structured, TypeName = \"{udttName}\", Value = {udttName}.ToDataTable({nt.Name}))"
         | _ -> // primitive type
-            $"SqlParameter(\"{nt.SqlParameterName}\", SqlDbType.{nt.SqlType.SqlDbType.ToString()}, Value = {formatToDotnetInput nt})"
+            // A nullable input must reach SqlParameter.Value as the boxed value or DBNull.Value:
+            // a plain null (which an empty Nullable boxes to) is read by SqlClient as "not supplied".
+            let valueExpr =
+                if nt.Nullable then $"(match {nt.Name} with | ValueSome x -> box x | ValueNone -> box DBNull.Value)"
+                else nt.Name
+            $"SqlParameter(\"{nt.SqlParameterName}\", SqlDbType.{nt.SqlType.SqlDbType.ToString()}, Value = {valueExpr})"
 
 module private Helpers =
     let memberExpr(name: string) = "    member _." + name + " = " + name
