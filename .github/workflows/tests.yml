@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  test:
+    # Cloud-hosted Windows runner (not self-hosted): this is a public repo, so fork PRs
+    # must not run on Summatic infrastructure. The image ships SQL Server LocalDB, which
+    # the tests deploy to and query.
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Start SQL Server LocalDB
+        shell: pwsh
+        run: |
+          sqllocaldb start MSSQLLocalDB
+          sqllocaldb info MSSQLLocalDB
+
+      # Building the solution also deploys the TestSql dacpac to localdb (the sqlproj's
+      # AfterBuild target), so the database is ready before the tests run.
+      - name: Build (deploys TestSql to localdb)
+        run: dotnet build ADONetCodeGen.slnx
+
+      - name: Run tests
+        run: dotnet run --project Tests/Tests/Tests.fsproj --no-build
