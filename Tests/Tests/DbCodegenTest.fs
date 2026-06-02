@@ -10,8 +10,9 @@ open GeneratedTestConnection.DataCore
 
 let [<Literal>] private hashText = "// Sql Hash: "
 
-/// Hash of all the SQL source: every *.sql file plus the SQL project file,
-/// sorted by path, concatenating each file's name and lines (MurmurHash128).
+/// Hash of all the SQL source, used to detect when the generated code is stale: the *.sql
+/// files sorted by path, then the SQL project file appended last, concatenating each file's
+/// name and lines. Uses MurmurHash128 truncated to its first 64 bits (via BitConverter.ToUInt64).
 let private computeSqlHash (sqlDir: DirectoryInfo) =
     let sqlFileInfos =
         let sqlProjFile = sqlDir.EnumerateFiles("*.sqlproj") |> Seq.exactlyOne
