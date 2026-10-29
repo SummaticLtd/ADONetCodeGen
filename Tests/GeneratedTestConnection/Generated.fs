@@ -1,4 +1,4 @@
-﻿// Sql Hash: cb915668d1f39c39
+﻿// Sql Hash: 123ca7c869d8cf41
 // This code is auto-generated
 namespace GeneratedADONET.dbo
 open System
@@ -35,6 +35,10 @@ module InsertWidget =
             )
     let Command =
         GenADO.StoredProcNonQuery<Input>("[dbo].[InsertWidget]", (fun i -> i.CommandParams))
+[<RequireQualifiedAccess>]
+module WaitTwoSeconds =
+    let Command =
+        GenADO.StoredProcNonQuery<unit>("[dbo].[WaitTwoSeconds]", (fun () -> ImmutableArray.Empty))
 // ----------------------
 // User Defined Functions
 // ----------------------
