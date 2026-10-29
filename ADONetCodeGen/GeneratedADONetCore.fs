@@ -219,24 +219,24 @@ module Batch =
 module Command =
 
     /// ValueNone keeps SqlClient's default timeout.
-    let private mkCmd(conn: ISqlConnection, text: string, cmdType: CommandType, parameters: ImmutableArray<SqlParameter>, timeout: TimeSpan voption) =
+    let private mkCmd(conn: ISqlConnection, text: string, cmdType: CommandType, parameters: ImmutableArray<SqlParameter>, timeoutOverride: TimeSpan voption) =
         let cmd = new SqlCommand(text, conn.Connection, CommandType = cmdType)
         conn.Transaction |> Option.iter (fun t -> cmd.Transaction <- t)
-        timeout |> ValueOption.iter(fun t -> cmd.CommandTimeout <- int(Math.Ceiling t.TotalSeconds))
+        timeoutOverride |> ValueOption.iter(fun t -> cmd.CommandTimeout <- int(Math.Ceiling t.TotalSeconds))
         for p in parameters do
             cmd.Parameters.Add(p) |> ignore
         cmd
 
     /// Executes a non-query stored procedure and returns the number of records affected.
-    let executeStoredProcNonQuery<'Inputs>(conn: ISqlConnection, cmd: GenADO.StoredProcNonQuery<'Inputs>, input: 'Inputs, timeout: TimeSpan voption) : Threading.Tasks.Task<int> =
+    let executeStoredProcNonQuery<'Inputs>(conn: ISqlConnection, cmd: GenADO.StoredProcNonQuery<'Inputs>, input: 'Inputs, timeoutOverride: TimeSpan voption) : Threading.Tasks.Task<int> =
         task {
-            use command = mkCmd(conn, cmd.CommandText, CommandType.StoredProcedure, cmd.CommandParams input, timeout)
+            use command = mkCmd(conn, cmd.CommandText, CommandType.StoredProcedure, cmd.CommandParams input, timeoutOverride)
             return! command.ExecuteNonQueryAsync()
         }
 
-    let executeStoredProcQuery<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.StoredProcQuery<'Inputs, 'Output>, input: 'Inputs, timeout: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
+    let executeStoredProcQuery<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.StoredProcQuery<'Inputs, 'Output>, input: 'Inputs, timeoutOverride: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
         task {
-            use command = mkCmd(conn, cmd.CommandText, CommandType.StoredProcedure, cmd.CommandParams input, timeout)
+            use command = mkCmd(conn, cmd.CommandText, CommandType.StoredProcedure, cmd.CommandParams input, timeoutOverride)
             use! reader = command.ExecuteReaderAsync()
             let b = ImmutableArray.CreateBuilder<'Output>()
             while reader.Read() do
@@ -244,9 +244,9 @@ module Command =
             return b.ToImmutable()
         }
 
-    let executeTableUDF<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.TableUDF<'Inputs, 'Output>, input: 'Inputs, timeout: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
+    let executeTableUDF<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.TableUDF<'Inputs, 'Output>, input: 'Inputs, timeoutOverride: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
         task {
-            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, cmd.CommandParams input, timeout)
+            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, cmd.CommandParams input, timeoutOverride)
             use! reader = command.ExecuteReaderAsync()
             let b = ImmutableArray.CreateBuilder<'Output>()
             while reader.Read() do
@@ -254,17 +254,17 @@ module Command =
             return b.ToImmutable()
         }
 
-    let executeScalarUDF<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.ScalarUDF<'Inputs, 'Output>, input: 'Inputs, timeout: TimeSpan voption) : Threading.Tasks.Task<'Output> =
+    let executeScalarUDF<'Inputs, 'Output>(conn: ISqlConnection, cmd: GenADO.ScalarUDF<'Inputs, 'Output>, input: 'Inputs, timeoutOverride: TimeSpan voption) : Threading.Tasks.Task<'Output> =
         task {
-            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, cmd.CommandParams input, timeout)
+            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, cmd.CommandParams input, timeoutOverride)
             use! reader = command.ExecuteReaderAsync()
             reader.Read() |> ignore
             return cmd.ReadValue reader
         }
 
-    let executeTableGetter<'Output>(conn: ISqlConnection, cmd: GenADO.TableGetter<'Output>, timeout: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
+    let executeTableGetter<'Output>(conn: ISqlConnection, cmd: GenADO.TableGetter<'Output>, timeoutOverride: TimeSpan voption) : Threading.Tasks.Task<ImmutableArray<'Output>> =
         task {
-            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, ImmutableArray.Empty, timeout)
+            use command = mkCmd(conn, cmd.CommandText, CommandType.Text, ImmutableArray.Empty, timeoutOverride)
             use! reader = command.ExecuteReaderAsync()
             let b = ImmutableArray.CreateBuilder<'Output>()
             while reader.Read() do
@@ -299,7 +299,7 @@ module Extensions =
 
     type GenADO.StoredProcNonQuery<'Inputs> with
         /// Executes the stored procedure and returns the number of records affected.
-        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan) = Command.executeStoredProcNonQuery(conn, cmd, input, timeout)
+        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan) = Command.executeStoredProcNonQuery(conn, cmd, input, timeoutOverride)
         /// Executes the stored procedure as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         /// The batch component returns the number of records affected by the stored procedure.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.nonQuery(cmd, input)
@@ -308,11 +308,11 @@ module Extensions =
 
     type GenADO.StoredProcQuery<'Inputs, 'Output> with
         /// Executes the stored procedure and returns the results as an ImmutableArray of 'Output.
-        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan) = Command.executeStoredProcQuery(conn, cmd, input, timeout)
+        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan) = Command.executeStoredProcQuery(conn, cmd, input, timeoutOverride)
         /// Executes the stored procedure and returns the single result, or ValueNone if zero results. Throws an exception if more than one result is returned.
-        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan): Threading.Tasks.Task<'Output voption> =
+        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan): Threading.Tasks.Task<'Output voption> =
             task {
-                let! r = Command.executeStoredProcQuery(conn, cmd, input, timeout)
+                let! r = Command.executeStoredProcQuery(conn, cmd, input, timeoutOverride)
                 return
                     if r.Length = 0 then ValueNone
                     elif r.Length = 1 then ValueSome r.[0]
@@ -325,11 +325,11 @@ module Extensions =
 
     type GenADO.TableUDF<'Inputs, 'Output> with
         /// Executes the table UDF and returns the results as an ImmutableArray of 'Output.
-        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan) = Command.executeTableUDF(conn, cmd, input, timeout)
+        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan) = Command.executeTableUDF(conn, cmd, input, timeoutOverride)
         /// Executes the table UDF and returns the single result, or ValueNone if zero results. Throws an exception if more than one result is returned.
-        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan): Threading.Tasks.Task<'Output voption> =
+        member cmd.ExecuteSingle(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan): Threading.Tasks.Task<'Output voption> =
             task {
-                let! r = Command.executeTableUDF(conn, cmd, input, timeout)
+                let! r = Command.executeTableUDF(conn, cmd, input, timeoutOverride)
                 return
                     if r.Length = 0 then ValueNone
                     elif r.Length = 1 then ValueSome r.[0]
@@ -342,7 +342,7 @@ module Extensions =
 
     type GenADO.ScalarUDF<'Inputs, 'Output> with
         /// Executes the scalar UDF and returns the result as 'Output.
-        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeout: TimeSpan) = Command.executeScalarUDF(conn, cmd, input, timeout)
+        member cmd.Execute(conn: ISqlConnection, input: 'Inputs, [<Struct>] ?timeoutOverride: TimeSpan) = Command.executeScalarUDF(conn, cmd, input, timeoutOverride)
         /// Executes the scalar UDF as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
         member cmd.AsBatch(input: 'Inputs) = Batch.Single.scalarUDF(cmd, input)
         /// Executes the scalar UDF for each set of inputs in data as part of a batch, returning a BatchComponent that can be combined with other components into a single batch execution.
@@ -350,4 +350,4 @@ module Extensions =
 
     type GenADO.TableGetter<'Output> with
         /// Executes the table getter, returning all rows of the table as an ImmutableArray of 'Output.
-        member cmd.Execute(conn: ISqlConnection, [<Struct>] ?timeout: TimeSpan) = Command.executeTableGetter(conn, cmd, timeout)
+        member cmd.Execute(conn: ISqlConnection, [<Struct>] ?timeoutOverride: TimeSpan) = Command.executeTableGetter(conn, cmd, timeoutOverride)
