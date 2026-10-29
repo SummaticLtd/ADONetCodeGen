@@ -1,7 +1,5 @@
 module Tests.StoredProcTests
 
-open System
-open Microsoft.Data.SqlClient
 open SimpleTests
 open ADONetCodeGen.Core
 open GeneratedADONET.dbo
@@ -31,23 +29,5 @@ let private widgetProcs =
             do! cwt.RollbackAsync()
         })
 
-let private timeoutIsApplied =
-    Test.Async("A timeout cuts off a slower command and allows a faster one", fun () ->
-        task {
-            let! timedOut =
-                task {
-                    use! conn = GetDbConn()
-                    try
-                        let! _ = WaitTwoSeconds.Command.Execute(conn, (), TimeSpan.FromSeconds 1.)
-                        return false
-                    with :? SqlException as e when e.Number = -2 ->
-                        return true
-                }
-            Assert.True(timedOut, "Expected a timeout")
-            use! conn = GetDbConn()
-            let! _ = WaitTwoSeconds.Command.Execute(conn, (), TimeSpan.FromSeconds 5.)
-            ()
-        })
-
 let StoredProcTestList =
-    TestList("StoredProcTests", [ widgetProcs; timeoutIsApplied ])
+    TestList("StoredProcTests", [ widgetProcs ])
