@@ -1,4 +1,4 @@
-<Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
+<Project Sdk="MSBuild.Sdk.SqlProj/4.4.0">
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <!-- Sql150 (SQL Server 2019) is the floor for the localdb on GitHub's windows runners.
@@ -10,6 +10,8 @@
         <GenerateSmartDefaults>True</GenerateSmartDefaults>
         <DropObjectsNotInSource>True</DropObjectsNotInSource>
         <DropIndexesNotInSource>True</DropIndexesNotInSource>
+        <!-- TODO: delete once MSBuild.Sdk.SqlProj ships a net11.0 DacpacTool, which it picks by this. -->
+        <BundledNETCoreAppTargetFrameworkVersion>10.0</BundledNETCoreAppTargetFrameworkVersion>
     </PropertyGroup>
 
     <ItemGroup>
